@@ -19,7 +19,7 @@ $ go run server.go
 # todos
 - [ ] thoughts on scaling
 - [ ] bonus: let the user save the code
-- [ ] preserve line terminators in output
+- [x] preserve line terminators in output
 - [ ] docker run --help for dropping permissions
 
 # licence
