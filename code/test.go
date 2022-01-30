@@ -6,4 +6,3 @@ func main() {
   fmt.Println(5)
   fmt.Println(5)
 }
-    

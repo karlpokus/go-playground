@@ -13,9 +13,14 @@ How should it work?
 - server runs `docker run ... <code-path>` and returns stdout to the browser
 - browser displays the result
 
+# usage
+$ go run server.go
+
 # todos
-- [ ] scaling concerns
+- [ ] thoughts on scaling
 - [ ] bonus: let the user save the code
+- [ ] preserve line terminators in output
+- [ ] docker run --help for dropping permissions
 
 # licence
 MIT

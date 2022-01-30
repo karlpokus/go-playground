@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"time"
 )
 
@@ -28,6 +30,30 @@ func files() ([]byte, []byte, error) {
 	return html, js, err
 }
 
+func runChild(fpath string, w http.ResponseWriter) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	codeDirPathHost, _ := filepath.Abs("code")
+	codeDirPathVolume := fmt.Sprintf("%s:/code", codeDirPathHost)
+	codePathContainer := fmt.Sprintf("/%s", fpath)
+	args := []string{
+		"run", "--rm", "-v", "/usr/local/go:/go", "-v", codeDirPathVolume,
+		"ubuntu:20.04", "/go/bin/go", "run", codePathContainer,
+	}
+	cmd := exec.CommandContext(ctx, "docker", args...)
+	cmd.Stdout = w
+	cmd.Stderr = w
+	err := cmd.Start()
+	if err != nil {
+		return err
+	}
+	err = cmd.Wait()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func code(w http.ResponseWriter, r *http.Request) {
 	b, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -41,17 +67,15 @@ func code(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	// execute on host for now
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "go", "run", fpath)
-	cmd.Stdout = w
-	err = cmd.Start()
+	err = runChild(fpath, w)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
 	}
-	err = cmd.Wait()
+}
+
+func test(w http.ResponseWriter, r *http.Request) {
+	err := runChild("code/test.go", w)
 	if err != nil {
 		http.Error(w, err.Error(), 500)
 		return
@@ -66,6 +90,7 @@ func main() {
 	http.HandleFunc("/", file(html))
 	http.HandleFunc("/index.js", file(js))
 	http.HandleFunc("/code", code)
+	http.HandleFunc("/test", test)
 	port := ":9000"
 	log.Printf("listening on %s", port)
 	log.Fatal(http.ListenAndServe(port, nil))
