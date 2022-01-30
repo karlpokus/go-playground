@@ -42,7 +42,7 @@ func runChild(fpath string, w http.ResponseWriter) error {
 	}
 	cmd := exec.CommandContext(ctx, "docker", args...)
 	cmd.Stdout = w
-	cmd.Stderr = w
+	cmd.Stderr = w // yolo
 	err := cmd.Start()
 	if err != nil {
 		return err
@@ -69,7 +69,9 @@ func code(w http.ResponseWriter, r *http.Request) {
 	}
 	err = runChild(fpath, w)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		// child stdout is connected to w
+		// just log err
+		log.Printf("Error running child: %s", err)
 		return
 	}
 }
@@ -77,7 +79,7 @@ func code(w http.ResponseWriter, r *http.Request) {
 func test(w http.ResponseWriter, r *http.Request) {
 	err := runChild("code/test.go", w)
 	if err != nil {
-		http.Error(w, err.Error(), 500)
+		log.Printf("Error running child: %s", err)
 		return
 	}
 }
