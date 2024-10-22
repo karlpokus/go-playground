@@ -21,6 +21,7 @@ $ go run server.go
 - [ ] bonus: let the user save the code
 - [x] preserve line terminators in output
 - [ ] docker run --help for dropping permissions
+- [ ] maybe replace cmd ctx with sending the proc a signal?
 
 # licence
 MIT
